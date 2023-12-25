@@ -19,11 +19,16 @@ class Board(pygame.sprite.Group):
         self.top = top
         self.cell_size = cell_size
 
+    def make_field(self):
+        self.field = [[None] * self.width for _ in range(self.height)]
+        for sprite in self.sprites():
+            self.field[sprite.row + sprite.shape.row][sprite.col + sprite.shape.col] = sprite
+
     def render(self):
         for row in range(self.height):
             for col in range(self.width):
                 pygame.draw.rect(self.screen, 'white',
-                                 (self.top + row * self.cell_size, self.left + col * self.cell_size, self.cell_size,
+                                 (self.top + col * self.cell_size, self.left + row * self.cell_size, self.cell_size,
                                   self.cell_size), 1)
                 if self.field[row][col]:
                     self.field[row][col].render()
@@ -47,14 +52,20 @@ class Shape(pygame.sprite.Group):
                     self.struct[i].append(Cell((i, j), self.color, self, self.board))
                     self.add(self.struct[i][j])
 
-    def render(self, board):
-        # функция передающая фигуру
-        pass
-
     def update(self):
         # функция обновляющая координаты фигуры
         for sprite in self.sprites():
-            sprite.move()
+            if sprite.move() is False:
+                print()
+                return False
+        if self.direction == 0:
+            self.row -= 1
+        elif self.direction == 1:
+            self.col += 1
+        elif self.direction == 2:
+            self.row += 1
+        elif self.direction == 3:
+            self.col -= 1
         pass
 
 
@@ -65,6 +76,7 @@ class Cell(pygame.sprite.Sprite):
         self.color = color
         self.shape = shape
         self.board = board
+        self.board.add(self)
         self.board.field[self.row + self.shape.row][self.col + self.shape.col] = self
 
     def update(self, *args):
@@ -74,31 +86,29 @@ class Cell(pygame.sprite.Sprite):
         direction = self.shape.direction
         assert direction in range(4), "Направление движения должно быть в [0; 3]"
         if direction == 0:
-            if self.board.field[self.row][self.col - 1]:
+            if self.board.field[self.shape.row + self.row - 1][self.shape.col + self.col] and \
+                    self.board.field[self.shape.row + self.row - 1][
+                        self.shape.col + self.col] not in self.shape.sprites():
                 return False
-            self.col -= 1
-            self.board.field[self.row][self.col + 1] = None
-            self.board.field[self.row][self.col] = self
         elif direction == 1:
-            if self.board.field[self.row + 1][self.col]:
+            if self.board.field[self.shape.row + self.row][self.shape.col + self.col + 1] and \
+                    self.board.field[self.shape.row + self.row][
+                        self.shape.col + self.col + 1] not in self.shape.sprites():
                 return False
-            self.row += 1
-            self.board.field[self.row - 1][self.col] = None
-            self.board.field[self.row][self.col] = self
         elif direction == 2:
-            if self.board.field[self.row][self.col + 1]:
+            print(self.shape.row + self.row + 1, self.shape.col + self.col)
+            if self.board.field[self.shape.row + self.row + 1][self.shape.col + self.col] and \
+                    self.board.field[self.shape.row + self.row + 1][
+                        self.shape.col + self.col] not in self.shape.sprites():
                 return False
-            self.col += 1
-            self.board.field[self.row][self.col + 1] = None
-            self.board.field[self.row][self.col] = self
         elif direction == 3:
-            if self.board.field[self.row - 1][self.y]:
+            if self.board.field[self.shape.row + self.row][self.shape.col + self.col - 1] and \
+                    self.board.field[self.shape.row + self.row][
+                        self.shape.col + self.col - 1] not in self.shape.sprites():
                 return False
-            self.row -= 1
-            self.board.field[self.row][self.col + 1] = None
-            self.board.field[self.row][self.col] = self
 
     def render(self):
         pygame.draw.rect(self.board.screen, self.color, (
-            self.board.left + (self.col + self.shape.col) * self.board.cell_size, self.board.top + (self.row + self.shape.row) * self.board.cell_size,
+            self.board.left + (self.col + self.shape.col) * self.board.cell_size,
+            self.board.top + (self.row + self.shape.row) * self.board.cell_size,
             self.board.cell_size, self.board.cell_size))
