@@ -13,7 +13,7 @@ if __name__ == '__main__':
     board = Board(10, 7, screen)
     board.set_view(50, 50, 30)
 
-    shape = Shape([[0, 0, 1], [1, 1, 1]], (0, 255, 255), 2, (2, 3), board)
+    shape1 = Shape([[0, 0, 1], [1, 1, 1]], (0, 100, 255), (2, 3), board)
     while running:
         screen.fill('black')
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
 
-        shape.update()
+        shape1.update('m', 3)
         board.render()
         pygame.display.flip()
 
