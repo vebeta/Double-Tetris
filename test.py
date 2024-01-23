@@ -47,6 +47,9 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
                 current_shape.move(2)
 
+            if event.type == pygame.KEYDOWN and (event.key == pygame.K_UP or event.key == pygame.K_SPACE):
+                current_shape.rotate()
+
         if cur_iter == v:
             cur_iter = 0
             if current_shape.move() is False:

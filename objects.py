@@ -1,6 +1,14 @@
 import pygame
 
 
+def rotate_matrix(matrix):
+    rotated_matrix = [[0 for i in range(len(matrix))] for i in range(len(matrix[0]))]
+    for i in range(len(matrix)):
+        for j in range(len(matrix[0])):
+            rotated_matrix[j][i] = matrix[len(matrix) - i - 1][j]
+    return rotated_matrix
+
+
 class Board(pygame.sprite.Group):
     # создание поля
     def __init__(self, width: int, height: int, screen: pygame.Surface, field: str):
@@ -107,16 +115,17 @@ class Shape(pygame.sprite.Group):
         self.board = board
         self.direction = direction
         self.row, self.col = coords
-        self.struct = []
-        for i in range(len(struct)):
-            self.struct.append([])
-            for j in range(len(struct[i])):
-                assert struct[i][j] in range(2), "Некорректный формат структуры фигуры"
-                if struct[i][j] == 0:
-                    self.struct[i].append(None)
-                elif struct[i][j] == 1:
-                    self.struct[i].append(MovingCell((i, j), self.color, self, self.board))
-                    self.add(self.struct[i][j])
+        self.struct = struct
+        self.cells = []
+        for i in range(len(self.struct)):
+            self.cells.append([])
+            for j in range(len(self.struct[i])):
+                assert self.struct[i][j] in range(2), "Некорректный формат структуры фигуры"
+                if self.struct[i][j] == 0:
+                    self.cells[i].append(None)
+                elif self.struct[i][j] == 1:
+                    self.cells[i].append(MovingCell((i, j), self.color, self, self.board))
+                    self.add(self.cells[i][j])
         self.width = len(self.struct[0])
         self.height = len(self.struct)
 
@@ -135,6 +144,30 @@ class Shape(pygame.sprite.Group):
             self.row += 1
         elif direction == 3:
             self.col -= 1
+
+    def make_cells(self):
+        self.cells = []
+        for i in range(len(self.struct)):
+            self.cells.append([])
+            for j in range(len(self.struct[i])):
+                assert self.struct[i][j] in range(2), "Некорректный формат структуры фигуры"
+                if self.struct[i][j] == 0:
+                    self.cells[i].append(None)
+                elif self.struct[i][j] == 1:
+                    self.cells[i].append(MovingCell((i, j), self.color, self, self.board))
+                    self.add(self.cells[i][j])
+        self.width = len(self.struct[0])
+        self.height = len(self.struct)
+
+    def rotate(self):
+        for i in range(len(self.cells)):
+            for j in range(len(self.cells[0])):
+                if self.cells[i][j]:
+                    self.cells[i][j].kill()
+        self.struct = rotate_matrix(self.struct)
+        self.make_cells()
+        self.width = len(self.struct[0])
+        self.height = len(self.struct)
 
 
 class Cell(pygame.sprite.Sprite):
