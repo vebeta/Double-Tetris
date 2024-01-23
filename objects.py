@@ -1,5 +1,4 @@
 import pygame
-from methods import make_radius
 
 
 class Board(pygame.sprite.Group):
@@ -10,16 +9,55 @@ class Board(pygame.sprite.Group):
         self.width = width
         self.height = height
         field = [list(map(int, row.split())) for row in field.split('\n')]
-        self.radius, self.colors = make_radius(field)
-        assert len(field) == self.height and len(field[0]) == self.width, "Размеры поля и карты отличаются"
         self.field = []
         for i in range(len(field)):
             self.field.append([])
             for j in range(len(field[i])):
                 self.field[i].append((StopCell((i, j), (100, 100, 100), self) if field[i][j] == 1 else None))
+        assert len(field) == self.height and len(field[0]) == self.width, "Размеры поля и карты отличаются"
+        self.radius, self.colors = self.make_radius(field)
         self.left = 10
         self.top = 10
         self.cell_size = 30
+
+    def make_radius(self, field):
+        radius = field.copy()
+        cl = 1
+        cnt = 0
+        colors = {}
+        while 0 in [radius[i][j] for i in range(len(field)) for j in range(len(field[i]))]:
+            for i in range(len(field)):
+                for j in range(len(field[0])):
+                    if radius[i][j] != 0:
+                        continue
+                    if i > 0 and radius[i - 1][j] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif i > 0 and j > 0 and radius[i - 1][j - 1] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif j > 0 and radius[i][j - 1] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif j > 0 and i < len(field) - 1 and radius[i + 1][j - 1] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif i < len(field) - 1 and radius[i + 1][j] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif i < len(field) - 1 and j < len(field[0]) - 1 and radius[i + 1][j + 1] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif j < len(field[0]) - 1 and radius[i][j + 1] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+                    elif i > 0 and j < len(field[0]) - 1 and radius[i - 1][j + 1] == cl:
+                        radius[i][j] = cl + 1
+                        cnt += 1
+            colors[cl + 1] = cnt
+            cl += 1
+            cnt = 0
+        return radius, colors
 
     # настройка внешнего вида
     def set_view(self, left, top, cell_size):
@@ -81,10 +119,6 @@ class Shape(pygame.sprite.Group):
                     self.add(self.struct[i][j])
         self.width = len(self.struct[0])
         self.height = len(self.struct)
-
-    def update(self, *args):
-        if args[0] == 'm':
-            self.move(args[1])
 
     def move(self, direction=None):
         # функция обновляющая координаты фигуры

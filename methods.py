@@ -1,3 +1,7 @@
+from objects import Shape
+from random import randint, choice
+
+
 def make_radius(field):
     radius = field.copy()
     cl = 1
@@ -37,3 +41,11 @@ def make_radius(field):
         cnt = 0
     return radius, colors
 
+
+def random_shape(board, direction, row, col):
+    shapes = [((1, 1, 1), (1, 0, 0)), ((1, 1, 1, 1), ), ((0, 1, 0), (1, 1, 1)), ((0, 1, 1), (1, 1, 0)), ((1, 1), (1, 1)), ((1, 1, 1), (0, 0, 1))]
+    return Shape(choice(shapes), random_color(), (row, col), direction, board)
+
+
+def random_color():
+    return randint(0, 255), randint(0, 255), randint(0, 255)

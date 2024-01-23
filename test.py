@@ -1,7 +1,20 @@
 import pygame
-import time
 
+from random import randint
 from objects import Board, Shape, Cell
+from methods import random_shape
+
+
+test_field = '''0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                1 1 1 1 1 1 1 1 1 1'''
 
 if __name__ == '__main__':
     pygame.init()
@@ -10,10 +23,14 @@ if __name__ == '__main__':
 
     running = True
 
-    board = Board(10, 7, screen)
+    board = Board(10, 10, screen, test_field)
     board.set_view(50, 50, 30)
 
-    shape1 = Shape([[0, 0, 1], [1, 1, 1]], (0, 100, 255), (2, 3), board)
+    current_shape = random_shape(board, 2, 0, 4)
+    v = 30
+    cur_iter = 0
+    fps = 30
+    clock = pygame.time.Clock()
     while running:
         screen.fill('black')
 
@@ -21,10 +38,26 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
 
-        shape1.update('m', 3)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                current_shape.move(1)
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                current_shape.move(3)
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                current_shape.move(2)
+
+        if cur_iter == v:
+            cur_iter = 0
+            if current_shape.move() is False:
+                board.check()
+                current_shape = random_shape(board, 2, 0, 4)
+        board.update_field()
         board.render()
         pygame.display.flip()
 
-        time.sleep(1)
+        clock.tick(fps)
+
+        cur_iter += 1
 
     pygame.quit()
