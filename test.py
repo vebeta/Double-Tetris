@@ -14,6 +14,11 @@ test_field = '''0 0 0 0 0 0 0 0 0 0
                 0 0 0 0 0 0 0 0 0 0
                 0 0 0 0 0 0 0 0 0 0
                 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0
                 1 1 1 1 1 1 1 1 1 1'''
 
 if __name__ == '__main__':
@@ -23,11 +28,15 @@ if __name__ == '__main__':
 
     running = True
 
-    board = Board(10, 10, screen, test_field)
+    board = Board(10, 15, screen, test_field)
     board.set_view(50, 50, 30)
 
     current_shape = random_shape(board, 2, 0, 4)
+    is_moved = False
     v = 30
+    fast_down = False
+    right_move = False
+    left_move = False
     cur_iter = 0
     fps = 30
     clock = pygame.time.Clock()
@@ -39,22 +48,50 @@ if __name__ == '__main__':
                 running = False
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                current_shape.move(1)
+                right_move = True
+
+            if event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
+                right_move = False
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                current_shape.move(3)
+                left_move = True
+
+            if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
+                left_move = False
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                current_shape.move(2)
+                fast_down = True
+
+            if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
+                fast_down = False
 
             if event.type == pygame.KEYDOWN and (event.key == pygame.K_UP or event.key == pygame.K_SPACE):
                 current_shape.rotate()
 
+        if fast_down and cur_iter % 2:
+            current_shape.move(2)
+
+        if right_move and not cur_iter % 3:
+            current_shape.move(1)
+
+        if left_move and not cur_iter % 3:
+            current_shape.move(3)
+
         if cur_iter == v:
             cur_iter = 0
-            if current_shape.move() is False:
-                board.check()
-                current_shape = random_shape(board, 2, 0, 4)
+            if not current_shape or current_shape.move() is False:
+                if not is_moved:
+                    assert(False, 'Функция для поражения')
+                if current_shape:
+                    current_shape.stop_shape()
+                    current_shape = None
+                if board.check():
+                    pass
+                else:
+                    current_shape = random_shape(board, 2, 0, 4)
+                    fast_down = False
+                    right_move = False
+                    left_move = False
         board.update_field()
         board.render()
         pygame.display.flip()

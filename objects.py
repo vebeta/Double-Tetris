@@ -76,7 +76,7 @@ class Board(pygame.sprite.Group):
     def update_field(self):
         self.field = [[None] * self.width for _ in range(self.height)]
         for sprite in self.sprites():
-            if type(sprite) is MovingCell:
+            if type(sprite) is MovingCell and sprite.shape:
                 self.field[sprite.row + sprite.shape.row][sprite.col + sprite.shape.col] = sprite
             else:
                 self.field[sprite.row][sprite.col] = sprite
@@ -90,13 +90,26 @@ class Board(pygame.sprite.Group):
         for i in range(2, len(self.colors) + 2):
             if colors_filled.get(i, 0) == self.colors[i]:
                 self.delete(i)
-                return
+                self.move_shapes()
+                return True
+        return False
 
     def delete(self, color):
         for i in range(len(self.field)):
             for j in range(len(self.field[i])):
                 if self.radius[i][j] == color:
                     self.field[i][j].kill()
+                    self.field[i][j] = None
+
+    def move_shapes(self):
+        flag = True
+        while flag:
+            flag = False
+            for i in range(len(self.field)):
+                for j in range(len(self.field[i])):
+                    if type(self.field[i][j]) is MovingCell and self.field[i][j].can_move():
+                        flag = True
+                        self.field[i][j].move()
 
     def render(self):
         for row in range(self.height):
@@ -117,6 +130,7 @@ class Shape(pygame.sprite.Group):
         self.row, self.col = coords
         self.struct = struct
         self.cells = []
+        self.moving = True
         for i in range(len(self.struct)):
             self.cells.append([])
             for j in range(len(self.struct[i])):
@@ -134,7 +148,7 @@ class Shape(pygame.sprite.Group):
         if not direction:
             direction = self.direction
         for sprite in self.sprites():
-            if sprite.move(direction) is False:
+            if sprite.can_move(direction) is False:
                 return False
         if direction == 0:
             self.row -= 1
@@ -158,6 +172,15 @@ class Shape(pygame.sprite.Group):
                     self.add(self.cells[i][j])
         self.width = len(self.struct[0])
         self.height = len(self.struct)
+
+    def stop_shape(self):
+        if not self.moving:
+            return
+        self.moving = False
+        for i in range(len(self.cells)):
+            for j in range(len(self.cells[i])):
+                if self.cells[i][j]:
+                    self.cells[i][j].stop()
 
     def rotate(self):
         for i in range(len(self.cells)):
@@ -194,40 +217,92 @@ class MovingCell(Cell):
         super().__init__(coords, color, board)
         self.shape = shape
         self.board.field[self.row + self.shape.row][self.col + self.shape.col] = self
+        self.direction = None
         shape.add(self)
 
-    def move(self, direction):
+    def can_move(self, direction=None):
+        if not direction:
+            direction = self.direction
         assert direction in range(4), "Направление движения должно быть в [0; 3]"
         try:
-            if direction == 0:
-                if self.shape.row + self.row == 0:
-                    return False
-                if self.board.field[self.shape.row + self.row - 1][self.shape.col + self.col] and \
-                        self.board.field[self.shape.row + self.row - 1][
-                            self.shape.col + self.col] not in self.shape.sprites():
-                    return False
-            elif direction == 1:
-                if self.board.field[self.shape.row + self.row][self.shape.col + self.col + 1] and \
-                        self.board.field[self.shape.row + self.row][
-                            self.shape.col + self.col + 1] not in self.shape.sprites():
-                    return False
-            elif direction == 2:
-                if self.board.field[self.shape.row + self.row + 1][self.shape.col + self.col] and \
-                        self.board.field[self.shape.row + self.row + 1][
-                            self.shape.col + self.col] not in self.shape.sprites():
-                    return False
-            elif direction == 3:
-                if self.shape.col + self.col == 0:
-                    return False
-                if self.board.field[self.shape.row + self.row][self.shape.col + self.col - 1] and \
-                        self.board.field[self.shape.row + self.row][
-                            self.shape.col + self.col - 1] not in self.shape.sprites():
-                    return False
+            if self.shape:
+                if direction == 0:
+                    if self.shape.row + self.row == 0:
+                        return False
+                    if self.board.field[self.shape.row + self.row - 1][self.shape.col + self.col] and \
+                            self.board.field[self.shape.row + self.row - 1][
+                                self.shape.col + self.col] not in self.shape.sprites():
+                        return False
+                elif direction == 1:
+                    if self.board.field[self.shape.row + self.row][self.shape.col + self.col + 1] and \
+                            self.board.field[self.shape.row + self.row][
+                                self.shape.col + self.col + 1] not in self.shape.sprites():
+                        return False
+                elif direction == 2:
+                    if self.board.field[self.shape.row + self.row + 1][self.shape.col + self.col] and \
+                            self.board.field[self.shape.row + self.row + 1][
+                                self.shape.col + self.col] not in self.shape.sprites():
+                        return False
+                elif direction == 3:
+                    if self.shape.col + self.col == 0:
+                        return False
+                    if self.board.field[self.shape.row + self.row][self.shape.col + self.col - 1] and \
+                            self.board.field[self.shape.row + self.row][
+                                self.shape.col + self.col - 1] not in self.shape.sprites():
+                        return False
+            else:
+                if direction == 0:
+                    if self.row == 0:
+                        return False
+                    if self.board.field[self.row - 1][self.col]:
+                        return False
+                elif direction == 1:
+                    if self.board.field[self.row][self.col + 1]:
+                        return False
+                elif direction == 2:
+                    if self.board.field[self.row + 1][self.col]:
+                        return False
+                elif direction == 3:
+                    if self.col == 0:
+                        return False
+                    if self.board.field[self.row][self.col - 1]:
+                        return False
         except IndexError:
             return False
+        return True
+
+    def stop(self):
+        self.direction = self.shape.direction
+        self.row += self.shape.row
+        self.col += self.shape.col
+        self.shape = None
+
+    def move(self, direction=None):
+        if not direction:
+            direction = self.direction
+        if self.can_move(direction):
+            if direction == 0:
+                self.board.field[self.row][self.col] = None
+                self.row -= 1
+                self.board.field[self.row][self.col] = self
+            elif direction == 1:
+                self.board.field[self.row][self.col] = None
+                self.col += 1
+                self.board.field[self.row][self.col] = self
+            elif direction == 2:
+                self.board.field[self.row][self.col] = None
+                self.row += 1
+                self.board.field[self.row][self.col] = self
+            elif direction == 3:
+                self.board.field[self.row][self.col] = None
+                self.col -= 1
+                self.board.field[self.row][self.col] = self
 
     def render(self):
-        pygame.draw.rect(self.board.screen, self.color, (
-            self.board.left + (self.col + self.shape.col) * self.board.cell_size,
-            self.board.top + (self.row + self.shape.row) * self.board.cell_size,
-            self.board.cell_size, self.board.cell_size))
+        if self.shape:
+            pygame.draw.rect(self.board.screen, self.color, (
+                self.board.left + (self.col + self.shape.col) * self.board.cell_size,
+                self.board.top + (self.row + self.shape.row) * self.board.cell_size,
+                self.board.cell_size, self.board.cell_size))
+        else:
+            super().render()
