@@ -145,7 +145,7 @@ class Shape(pygame.sprite.Group):
 
     def move(self, direction=None):
         # функция обновляющая координаты фигуры
-        if not direction:
+        if direction is None:
             direction = self.direction
         for sprite in self.sprites():
             if sprite.can_move(direction) is False:
@@ -221,7 +221,7 @@ class MovingCell(Cell):
         shape.add(self)
 
     def can_move(self, direction=None):
-        if not direction:
+        if direction is None:
             direction = self.direction
         assert direction in range(4), "Направление движения должно быть в [0; 3]"
         try:
@@ -278,7 +278,7 @@ class MovingCell(Cell):
         self.shape = None
 
     def move(self, direction=None):
-        if not direction:
+        if direction is None:
             direction = self.direction
         if self.can_move(direction):
             if direction == 0:
