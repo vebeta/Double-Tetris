@@ -23,7 +23,7 @@ test_field = '''0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 
 if __name__ == '__main__':
     pygame.init()
-    size = X, Y = 501, 501
+    size = X, Y = 1001, 701
     screen = pygame.display.set_mode(size)
 
     running = True
@@ -32,8 +32,8 @@ if __name__ == '__main__':
     board.set_view(50, 50, 30)
 
     current_shape = random_shape(board, 2, 0, 6)
-    is_moved = False
     v = 30
+    moving_shapes = False
     down_move = False
     right_move = False
     left_move = False
@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
         # print(left_move, right_move, up_move, down_move)
 
-        if down_move and cur_iter % 3:
+        if down_move and not cur_iter % 3:
             current_shape.move(2)
 
         if right_move and not cur_iter % 3:
@@ -104,33 +104,38 @@ if __name__ == '__main__':
 
         if cur_iter == v:
             cur_iter = 0
-            if not current_shape or current_shape.move() is False:
-                print(is_moved)
-                if not is_moved:
+            if not current_shape or (act := current_shape.move()) is False or act == 'lose':
+                if act == 'lose':
                     assert False, 'Функция для поражения'
                 if current_shape:
                     current_shape.stop_shape()
                     current_shape = None
-                if board.check():
-                    pass
+                n = board.check()
+                if n or moving_shapes:
+                    try:
+                        moving_shapes = board.move_shapes()
+                        pass
+                    except IndexError:
+                        assert False, 'Функция для поражения'
                 else:
-                    is_moved = False
                     side = (side + 1) % 4
                     if side == 0:
                         current_shape = random_shape(board, 2, 0, 6)
                     elif side == 1:
-                        current_shape = random_shape(board, 3, 6, 12)
+                        current_shape = random_shape(board, 3, 6, 14)
                     elif side == 2:
-                        current_shape = random_shape(board, 0, 12, 6)
+                        current_shape = random_shape(board, 0, 14, 6)
                     elif side == 3:
                         current_shape = random_shape(board, 1, 6, 0)
+                    is_moved = False
                     down_move = False
                     up_move = False
                     right_move = False
                     left_move = False
-            else:
-                is_moved = True
-        board.update_field()
+        try:
+            board.update_field()
+        except IndexError:
+            assert False, 'Функция для поражения'
         board.render()
         pygame.display.flip()
 

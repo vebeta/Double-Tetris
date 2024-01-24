@@ -2,12 +2,13 @@ import pygame
 
 
 class Button():
-    def __init__(self, x, y, width, height, text, image_path, trig_image_path=None, sound_path=None):
+    def __init__(self, x, y, width, height, text, image_path, trig_image_path=None, font_path=None, sound_path=None):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.text = text
+        self.font = font_path
 
         self.is_triggered = False
         self.image = pygame.image.load(image_path)
@@ -23,7 +24,7 @@ class Button():
         current_image = self.trig_image if self.is_triggered else self.image
         screen.blit(current_image, self.rect.topleft)
 
-        font = pygame.font.Font(None, 50)
+        font = pygame.font.Font(self.font, self.width // self.height * 9)
         text = font.render(self.text, True, (0, 0, 0))
         text_rect = text.get_rect(center=self.rect.center)
         screen.blit(text, text_rect)
@@ -31,8 +32,8 @@ class Button():
     def check_triggered(self, mouse_pos):
         self.is_triggered = self.rect.collidepoint(mouse_pos)
 
-    def process_events(self, event):
+    def process_events(self, event, sound_flag):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.is_triggered:
-            if self.sound:
+            if self.sound and sound_flag:
                 self.sound.play()
             pygame.event.post(pygame.event.Event(pygame.USEREVENT, button=self))
