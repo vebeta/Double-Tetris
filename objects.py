@@ -258,7 +258,7 @@ class MovingCell(Cell):
             if self.shape:
                 if direction == 0:
                     if self.shape.row + self.row == 0:
-                        return False
+                        return 'lose'
                     if self.board.field[self.shape.row + self.row - 1][self.shape.col + self.col] and \
                             self.board.field[self.shape.row + self.row - 1][
                                 self.shape.col + self.col] not in self.shape.sprites():
@@ -275,7 +275,7 @@ class MovingCell(Cell):
                         return False
                 elif direction == 3:
                     if self.shape.col + self.col == 0:
-                        return False
+                        return 'lose'
                     if self.board.field[self.shape.row + self.row][self.shape.col + self.col - 1] and \
                             self.board.field[self.shape.row + self.row][
                                 self.shape.col + self.col - 1] not in self.shape.sprites():
@@ -283,7 +283,9 @@ class MovingCell(Cell):
             else:
                 if direction == 0:
                     if self.row == 0:
-                        return False
+                        self.board.field[self.row][self.col] = None
+                        self.kill()
+                        return 'kill'
                     if self.board.field[self.row - 1][self.col]:
                         return False
                 elif direction == 1:
@@ -294,11 +296,18 @@ class MovingCell(Cell):
                         return False
                 elif direction == 3:
                     if self.col == 0:
-                        return False
+                        self.board.field[self.row][self.col] = None
+                        self.kill()
+                        return 'kill'
                     if self.board.field[self.row][self.col - 1]:
                         return False
         except IndexError:
-            return False
+            if self.shape:
+                return 'lose'
+            else:
+                self.board.field[self.row][self.col] = None
+                self.kill()
+                return 'kill'
         return True
 
     def stop(self):

@@ -104,7 +104,9 @@ if __name__ == '__main__':
 
         if cur_iter == v:
             cur_iter = 0
-            if not current_shape or current_shape.move() is False:
+            if not current_shape or (act := current_shape.move()) is False or act == 'lose':
+                if act == 'lose':
+                    assert False, 'Функция для поражения'
                 if current_shape:
                     current_shape.stop_shape()
                     current_shape = None

@@ -5,21 +5,22 @@ from objects import Board, Shape, Cell
 from methods import random_shape
 
 
-test_field = '''0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 1 0 0 0 1 0 0 0 0 0
-                0 0 0 0 0 1 1 1 1 1 0 0 0 0 0
-                0 0 0 0 0 1 1 1 1 1 0 0 0 0 0
-                0 0 0 0 0 1 0 0 0 1 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'''
+test_field = '''0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'''
 
 if __name__ == '__main__':
     pygame.init()
@@ -28,10 +29,10 @@ if __name__ == '__main__':
 
     running = True
 
-    board = Board(15, 15, screen, test_field)
+    board = Board(21, 16, screen, test_field)
     board.set_view(50, 50, 30)
 
-    current_shape = random_shape(board, 2, 0, 6)
+    current_shape = random_shape(board, 2, 0, 10)
     v = 30
     moving_shapes = False
     down_move = False
@@ -104,7 +105,9 @@ if __name__ == '__main__':
 
         if cur_iter == v:
             cur_iter = 0
-            if not current_shape or current_shape.move() is False:
+            if not current_shape or (act := current_shape.move()) is False or act == 'lose':
+                if act == 'lose':
+                    assert False, 'Функция для поражения'
                 if current_shape:
                     current_shape.stop_shape()
                     current_shape = None
@@ -118,13 +121,13 @@ if __name__ == '__main__':
                 else:
                     side = (side + 1) % 4
                     if side == 0:
-                        current_shape = random_shape(board, 2, 0, 6)
+                        current_shape = random_shape(board, 2, 0, 10)
                     elif side == 1:
-                        current_shape = random_shape(board, 3, 6, 14)
+                        current_shape = random_shape(board, 3, 8, 21)
                     elif side == 2:
-                        current_shape = random_shape(board, 0, 14, 6)
+                        current_shape = random_shape(board, 0, 16, 10)
                     elif side == 3:
-                        current_shape = random_shape(board, 1, 6, 0)
+                        current_shape = random_shape(board, 1, 8, 0)
                     is_moved = False
                     down_move = False
                     up_move = False
