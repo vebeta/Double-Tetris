@@ -153,8 +153,9 @@ class Shape(pygame.sprite.Group):
         if direction is None:
             direction = self.direction
         for sprite in self.sprites():
-            if sprite.can_move(direction) is False:
-                return False
+            act = sprite.can_move(direction)
+            if not act or act == 'lose':
+                return act
         if direction == 0:
             self.row -= 1
         elif direction == 1:
@@ -258,7 +259,10 @@ class MovingCell(Cell):
             if self.shape:
                 if direction == 0:
                     if self.shape.row + self.row == 0:
-                        return 'lose'
+                        if (self.shape and self.shape.direction == direction) or self.direction == direction:
+                            return 'lose'
+                        else:
+                            return False
                     if self.board.field[self.shape.row + self.row - 1][self.shape.col + self.col] and \
                             self.board.field[self.shape.row + self.row - 1][
                                 self.shape.col + self.col] not in self.shape.sprites():
@@ -275,7 +279,10 @@ class MovingCell(Cell):
                         return False
                 elif direction == 3:
                     if self.shape.col + self.col == 0:
-                        return 'lose'
+                        if (self.shape and self.shape.direction == direction) or self.direction == direction:
+                            return 'lose'
+                        else:
+                            return False
                     if self.board.field[self.shape.row + self.row][self.shape.col + self.col - 1] and \
                             self.board.field[self.shape.row + self.row][
                                 self.shape.col + self.col - 1] not in self.shape.sprites():
@@ -303,7 +310,10 @@ class MovingCell(Cell):
                         return False
         except IndexError:
             if self.shape:
-                return 'lose'
+                if (self.shape and self.shape.direction == direction) or self.direction == direction:
+                    return 'lose'
+                else:
+                    return False
             else:
                 self.board.field[self.row][self.col] = None
                 self.kill()
