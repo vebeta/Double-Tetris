@@ -43,8 +43,16 @@ def make_radius(field):
 
 
 def random_shape(board, direction, row, col):
-    shapes = [((1, 1, 1), (1, 0, 0)), ((1, 1, 1, 1), ), ((0, 1, 0), (1, 1, 1)), ((0, 1, 1), (1, 1, 0)), ((1, 1), (1, 1)), ((1, 1, 1), (0, 0, 1))]
-    return Shape(choice(shapes), random_color(), (row, col), direction, board)
+    shapes = [[[1, 1, 1], [1, 0, 0]], [[1, 1, 1, 1]], [[0, 1, 0], [1, 1, 1]], [[0, 1, 1], [1, 1, 0]], [[1, 1], [1, 1]],
+              [[1, 1, 1], [0, 0, 1]]]
+    struct = choice(shapes)
+    if direction in (0, 3):
+        return Shape(struct, random_color(), (min(row, board.height - len(struct)), min(col, board.width - len(struct[0]))),
+                 direction, board)
+    else:
+        return Shape(struct, random_color(),
+                     (row, col),
+                     direction, board)
 
 
 def random_color():

@@ -1,4 +1,5 @@
 import pygame
+from copy import deepcopy
 
 
 def rotate_matrix(matrix):
@@ -77,9 +78,15 @@ class Board(pygame.sprite.Group):
         self.field = [[None] * self.width for _ in range(self.height)]
         for sprite in self.sprites():
             if type(sprite) is MovingCell and sprite.shape:
-                self.field[sprite.row + sprite.shape.row][sprite.col + sprite.shape.col] = sprite
+                if not self.field[sprite.row + sprite.shape.row][sprite.col + sprite.shape.col]:
+                    self.field[sprite.row + sprite.shape.row][sprite.col + sprite.shape.col] = sprite
+                else:
+                    raise IndexError
             else:
-                self.field[sprite.row][sprite.col] = sprite
+                if not self.field[sprite.row][sprite.col]:
+                    self.field[sprite.row][sprite.col] = sprite
+                else:
+                    raise IndexError
 
     def check(self):
         colors_filled = {}
@@ -90,7 +97,6 @@ class Board(pygame.sprite.Group):
         for i in range(2, len(self.colors) + 2):
             if colors_filled.get(i, 0) == self.colors[i]:
                 self.delete(i)
-                self.move_shapes()
                 return True
         return False
 
@@ -102,14 +108,13 @@ class Board(pygame.sprite.Group):
                     self.field[i][j] = None
 
     def move_shapes(self):
-        flag = True
-        while flag:
-            flag = False
-            for i in range(len(self.field)):
-                for j in range(len(self.field[i])):
-                    if type(self.field[i][j]) is MovingCell and self.field[i][j].can_move():
-                        flag = True
-                        self.field[i][j].move()
+        flag = False
+        for i in range(len(self.field)):
+            for j in range(len(self.field[i])):
+                if type(self.field[i][j]) is MovingCell and self.field[i][j].can_move():
+                    flag = True
+                    self.field[i][j].move()
+        return flag
 
     def render(self):
         for row in range(self.height):
@@ -183,14 +188,36 @@ class Shape(pygame.sprite.Group):
                     self.cells[i][j].stop()
 
     def rotate(self):
-        for i in range(len(self.cells)):
-            for j in range(len(self.cells[0])):
-                if self.cells[i][j]:
-                    self.cells[i][j].kill()
-        self.struct = rotate_matrix(self.struct)
-        self.make_cells()
-        self.width = len(self.struct[0])
-        self.height = len(self.struct)
+        try:
+            for i in range(len(self.cells)):
+                for j in range(len(self.cells[0])):
+                    if self.cells[i][j]:
+                        self.cells[i][j].kill()
+            old_struct = deepcopy(self.struct)
+            self.struct = rotate_matrix(self.struct)
+            self.width = len(self.struct[0])
+            self.height = len(self.struct)
+            flag = True
+            for i in range(self.height):
+                for j in range(self.width):
+                    try:
+                        if (type(self.board.field[self.row + i][self.col + j]) is StopCell or (
+                                self.board.field[self.row + i][self.col + j] and self.board.field[self.row + i][
+                            self.col + j].shape != self)) and self.struct[i][j]:
+                            print('uuu')
+                            flag = False
+                            break
+                    except IndexError:
+                        if self.struct[i][j]:
+                            flag = False
+                            break
+            if not flag:
+                self.struct = old_struct
+            self.make_cells()
+            self.board.update_field()
+            return True
+        except IndexError:
+            return False
 
 
 class Cell(pygame.sprite.Sprite):
@@ -200,6 +227,9 @@ class Cell(pygame.sprite.Sprite):
         self.color = color
         self.board = board
         self.board.add(self)
+
+    def copy(self):
+        return Cell((self.row, self.col), self.color, self.board)
 
     def render(self):
         pygame.draw.rect(self.board.screen, self.color, (
@@ -297,6 +327,9 @@ class MovingCell(Cell):
                 self.board.field[self.row][self.col] = None
                 self.col -= 1
                 self.board.field[self.row][self.col] = self
+
+    def copy(self):
+        return MovingCell((self.row, self.col), self.color, self.shape, self.board)
 
     def render(self):
         if self.shape:
