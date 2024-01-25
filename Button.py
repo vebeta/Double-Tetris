@@ -2,13 +2,16 @@ import pygame
 
 
 class Button():
-    def __init__(self, x, y, width, height, text, image_path, trig_image_path=None, font_path=None, sound_path=None):
+    def __init__(self, x, y, width, height, text, image_path, trig_image_path=None, font_path=None, sound_path=None, text_size=None):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.text = text
         self.font = font_path
+        self.text_size = self.width // self.height * 9
+        if text_size is not None:
+            self.text_size = text_size
 
         self.is_triggered = False
         self.image = pygame.image.load(image_path)
@@ -24,7 +27,7 @@ class Button():
         current_image = self.trig_image if self.is_triggered else self.image
         screen.blit(current_image, self.rect.topleft)
 
-        font = pygame.font.Font(self.font, self.width // self.height * 9)
+        font = pygame.font.Font(self.font, self.text_size)
         text = font.render(self.text, True, (0, 0, 0))
         text_rect = text.get_rect(center=self.rect.center)
         screen.blit(text, text_rect)

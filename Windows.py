@@ -1,5 +1,6 @@
 import pygame
 import sys
+
 from Button import Button
 from game_functoins import display_text
 from objects import Board
@@ -11,6 +12,9 @@ WIDTH, HEIGHT = 1000, 600
 FONT = "FRM325x8.ttf"
 lives = 3
 diff = "Легко"
+time_triggers = {"Легко": 30,
+                 "Нормально": 60,
+                 "Сложно": 120}
 
 curr_level = '1'
 level_fields = {'1': '''0 0 0 0 0 0 0 0 0 0
@@ -121,6 +125,10 @@ def start_window():
 
 
 def game_window():
+    global lives
+
+    hours = mints = scnds = mil_scnds = 0
+
     buttons = []
 
     restart_button = Button(530, 410, 200, 55, "Заново", "button_bg.png", font_path=FONT,
@@ -167,30 +175,40 @@ def game_window():
     cur_iter = 0
     side = 0
 
-
     running = True
     while running:
 
         screen.fill((0, 0, 0))
 
-        pygame.draw.line(screen, (255, 255, 255), (WIDTH // 2 + 1, 0), (WIDTH // 2 + 1, 600))
+        pygame.draw.line(screen, (255, 255, 255), (WIDTH // 2 + 24, 0), (WIDTH // 2 + 24, 600))
 
-        display_text(screen, f"Жизни: {lives}", WIDTH // 2 + 5, 10, text_size=30)
+        display_text(screen, f"Жизни:  {lives}", WIDTH // 2 + 25, 10, text_size=30)
 
-        display_text(screen, f"Сложность: {diff}", WIDTH // 2 + 5, 50, text_size=30)
+        display_text(screen, f"Сложность:  {diff}", WIDTH // 2 + 25, 50, text_size=30)
 
-        display_text(screen, "Рекорд --", WIDTH // 2 + 5, 90, text_size=30)
+        display_text(screen, "Рекорд:  --", WIDTH // 2 + 25, 90, text_size=30)
 
-        display_text(screen, "Таймер", WIDTH // 2 + 5, 130, text_size=30)
+        display_text(screen, "Таймер:   {}:{}:{}".format(hours, mints, scnds), WIDTH // 2 + 25, 130, text_size=30)
 
-        display_text(screen, "Следующая фигура", WIDTH // 2 + 5, 170, text_size=30)
+        mil_scnds += 1
+        if mil_scnds == time_triggers[diff]:
+            scnds += 1
+            mil_scnds = 0
+        if scnds == time_triggers[diff]:
+            mints += 1
+            scnds = 0
+        if mints == time_triggers[diff]:
+            hours += 1
+            mints = 0
+
+        display_text(screen, "Следующая фигура:", WIDTH // 2 + 25, 170, text_size=30)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.USEREVENT and event.button == exit_button:
                 running = False
                 pygame.quit()
                 sys.exit()
-#
+
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 if current_shape.direction == 3:
                     current_shape.rotate()
@@ -229,16 +247,19 @@ def game_window():
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 current_shape.rotate()
-#
+
             if event.type == pygame.USEREVENT and event.button == back_button:
                 running = False
+            if event.type == pygame.USEREVENT and event.button == restart_button:
+                running = False
+                game_window()
             if event.type == pygame.USEREVENT and event.button == pause_button:
                 pause_window()
             if event.type == pygame.USEREVENT and event.button == settings_button:
                 settings_window()
             for but in buttons:
                 but.process_events(event, sound_flag)
-#
+
         if down_move and not cur_iter % 3:
             current_shape.move(2)
 
@@ -255,7 +276,12 @@ def game_window():
             cur_iter = 0
             if not current_shape or (act := current_shape.move()) is False or act == 'lose':
                 if act == 'lose':
-                    assert False, 'Функция для поражения'
+                    running = False
+                    if lives > 0:
+                        lives -= 1
+                        game_window()
+                    else:
+                        loose_window()
                 if current_shape:
                     current_shape.stop_shape()
                     current_shape = None
@@ -265,7 +291,12 @@ def game_window():
                         moving_shapes = board.move_shapes()
                         pass
                     except IndexError:
-                        assert False, 'Функция для поражения'
+                        running = False
+                        if lives > 0:
+                            lives -= 1
+                            game_window()
+                        else:
+                            loose_window()
                 else:
                     if curr_level == '1':
                         current_shape = random_shape(board, 2, 0, 6)
@@ -296,9 +327,14 @@ def game_window():
         try:
             board.update_field()
         except IndexError:
-            assert False, 'Функция для поражения'
+            running = False
+            if lives > 1:
+                lives -= 1
+                game_window()
+            else:
+                loose_window()
         board.render()
-#
+
         for but in buttons:
             but.check_triggered(pygame.mouse.get_pos())
             but.draw(screen)
@@ -353,7 +389,7 @@ def settings_window():
 
 
 def difficulty_settings_window():
-    global sound_flag, lives, diff
+    global sound_flag, lives, diff, fps
     difficulty_stngs_bg = pygame.image.load("settings_bg_2.jpg")
     difficulty_stngs_bg = pygame.transform.scale(difficulty_stngs_bg, (WIDTH, HEIGHT))
 
@@ -388,13 +424,16 @@ def difficulty_settings_window():
                 sys.exit()
             if event.type == pygame.USEREVENT and event.button == easy_button:
                 lives = 3
-                diff = "Сложно"
+                fps = 30
+                diff = "Легко"
             if event.type == pygame.USEREVENT and event.button == medium_button:
                 lives = 2
+                fps = 60
                 diff = "Нормально"
             if event.type == pygame.USEREVENT and event.button == hard_button:
                 lives = 1
-                diff = "Легко"
+                fps = 120
+                diff = "Сложно"
             if event.type == pygame.USEREVENT and event.button == back_button:
                 running = False
             for but in buttons:
@@ -531,12 +570,14 @@ def loose_window():
     running = True
 
     return_button = Button(WIDTH // 2 - 50, HEIGHT // 2 - 35, 100, 84, "ОК", "button_bg.png",
-                           font_path=FONT, sound_path="start_sound.mp3")
+                           font_path=FONT, sound_path="start_sound.mp3", text_size=40)
 
     while running:
         screen.fill((0, 0, 0))
 
-        display_text(screen, "Вы проиграли, нажмите ОК для возвращения в главное меню", WIDTH // 2, 50)
+        display_text(screen, "Вы проиграли", WIDTH // 3, 50, text_size=40)
+        display_text(screen, "Возможно вы нарушили правила (не делайте так)", 30, 130, text_size=30)
+        display_text(screen, "Нажмите ОК для возвращения в главное меню", 50, 200, text_size=30)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -548,8 +589,3 @@ def loose_window():
         return_button.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
-    return False
-
-
-if __name__ == "__main__":
-    start_window()

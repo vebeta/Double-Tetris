@@ -16,4 +16,4 @@ In the window of the game itself (level), you can pause the game, go to settings
 Also there you can see the number of lives (attempts) that you have left, the timer and the difficulty
 
 The shapes are controlled using the buttons ("arrows" and space bar) on your keyboard. 
-The space bar rotates the shape, and with the "arrows" you move it around the field
+The space bar rotates the shape, and with the "arrows" you move it around the field. Don't push buttons while figures are being destroyed.
