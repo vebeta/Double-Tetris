@@ -89,7 +89,6 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 current_shape.rotate()
 
-        # print(left_move, right_move, up_move, down_move)
 
         if down_move and not cur_iter % 3:
             current_shape.move(2)
